@@ -9,7 +9,11 @@
 #endif //INTERPRETER_COMMANDS_H
 */
 
-DEF_CMD(push, "push", 1,
+DEF_CMD(end, 0,{
+    data[(*write_point)++] = cmd_end;
+})
+
+DEF_CMD(push, 1,
     {
         data[(*write_point)++] = cmd_push;
 
@@ -53,8 +57,8 @@ DEF_CMD(push, "push", 1,
 //                printf("Don't find number of command in line <%d>\n", num_enter);
 //                abort();
             } else {
-            printf("Don't find number or register of command push <%d>\n", num_enter);
-            abort();
+                printf("Don't find number or register of command push <%d>\n", num_enter);
+                abort();
             }
         } else {
             printf("Number %lg\n", num);
@@ -70,7 +74,7 @@ DEF_CMD(push, "push", 1,
         //            data[(*write_point)] = 0x77; // this is wall
     })
 
-DEF_CMD(pop, "pop", 2,
+DEF_CMD(pop, 2,
     {
         data[(*write_point)++] = cmd_pop;
         char str_reg[10] ={};
@@ -123,34 +127,67 @@ DEF_CMD(pop, "pop", 2,
 //            abort();
     })
 
-DEF_CMD(add, "add", 3,{
+DEF_CMD(add, 3,{
         data[(*write_point)++] = cmd_add;
     })
 
-DEF_CMD(sub, "sub", 4,{
+DEF_CMD(sub, 4,{
         data[(*write_point)++] = cmd_sub;
     })
 
-DEF_CMD(div, "div", 5,{
+DEF_CMD(div, 5,{
     data[(*write_point)++] = cmd_div;
     })
 
-DEF_CMD(mul, "mul", 6,{
+DEF_CMD(mul, 6,{
         data[(*write_point)++] = cmd_mul;
     })
 
-DEF_CMD(sqrt, "sqrt", 7,{
+DEF_CMD(sqrt, 7,{
         data[(*write_point)++] = cmd_sqrt;
     })
 
-DEF_CMD(sin, "sin", 8,{
+DEF_CMD(sin, 8,{
         data[(*write_point)++] = cmd_sin;
     })
 
-DEF_CMD(cos, "cos", 9,{
+DEF_CMD(cos, 9,{
         data[(*write_point)++] = cmd_cos;
     })
 
-DEF_CMD(pow, "pow", 10,{
+DEF_CMD(pow, 10,{
         data[(*write_point)++] = cmd_pow;
     })
+
+DEF_CMD(jmp, 11, {
+        long num_jmp = 0;
+        data[(*write_point)++] = cmd_jmp;
+//    printf("poi before %d\n", pointer_read);
+        if (sscanf((first_symb + pointer_read), "%ld%n", &num_jmp, &pointer_read)){
+            printf("num %ld\n", num_jmp);
+            data[(*write_point)++] = 0xAA;
+            *(long*)(&data[(*write_point)]) = num_jmp;
+            *(write_point) += sizeof(long);
+        }
+//        printf("pi after %d\n", pointer_read);
+//        char s[10] = {};
+//        sscanf((first_symb + pointer_read), "%s%n", s, &pointer_read);
+//    printf("s[%s\n", s);
+        if (char* jmp_symbol = strchr(first_symb + pointer_read, ':')){
+            pointer_read = jmp_symbol + 1 - first_symb;
+            sscanf((first_symb + pointer_read), "%ld%n", &num_jmp, &pointer_read);
+            printf("jmp %ld\n", num_jmp);
+
+            if (num_jmp < 0 || num_jmp >= MAX_NUM_JMP) {
+                printf("Invalid jmp number<%d>\n", num_enter);
+                abort();
+            }
+
+            data[(*write_point)++] = 0xBB;
+            data[(*write_point)++] = array_jumps[num_jmp].address_jump_to;
+            array_jumps[num_jmp].used_jump = true;
+        }
+        //*((char*) (&data[*write_point])) = num;
+})
+
+

@@ -9,7 +9,7 @@
 #endif //INTERPRETER_REGISTER_H
 */
 
-REGISTER(ax, "ax", 1)
-REGISTER(bx, "bx", 2)
-REGISTER(cx, "cx", 3)
-REGISTER(dx, "dx", 4)
+REGISTER(ax, 1)
+REGISTER(bx, 2)
+REGISTER(cx, 3)
+REGISTER(dx, 4)

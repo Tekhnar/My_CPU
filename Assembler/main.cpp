@@ -12,16 +12,20 @@ void CommandProcessing (char* buffer, char* data, long length, commands* com, lo
 unsigned int MurmurHash(const char text[]);
 void FindRegister(commands* com, char str_reg[], unsigned int hash_read_reg, char* num_reg, int num_enter);
 
-FILE* ConvertFile(FILE* file, commands* com, const char name_file[] = "CODE.txt");
+FILE* ConvertFile(FILE* file, commands* com, const char name_file[] = "../workspace for processor/CODE.txt");
 
+struct jumps{
+    long address_jump_to;
+    bool used_jump;
+};
 
 int main() {
     commands com = {};
     CountConstHash(&com);
 
-    FILE* file = fopen("text.txt", "rb");
+    FILE* file = fopen("../workspace for processor/text.txt", "rb");
 
-    ConvertFile(file, &com, "CODE.txt");
+    ConvertFile(file, &com, "../workspace for processor/CODE.txt");
 //    FILE* newfile = fopen("CODE.txt", "w+");
 //    printf("string %p\n",file);
     fclose(file);
@@ -30,15 +34,15 @@ int main() {
 
 void CountConstHash(commands* com) {
 
-#define DEF_CMD(name, str, num, code) \
-    com->hash_##name = MurmurHash(str);
+#define DEF_CMD(name, num, code) \
+    com->hash_##name = MurmurHash(#name);
 
 #include "commands.h"
 
 #undef DEF_CMD
 
-#define REGISTER(name, str, num)\
-    com->hash_reg_##name = MurmurHash(str);
+#define REGISTER(name, num)\
+    com->hash_reg_##name = MurmurHash(#name);
 
     #include "register.h"
 
@@ -135,100 +139,125 @@ FILE* ConvertFile(FILE* file, commands* com, const char name_file[]){
     fclose(newfile);
 }
 
-void CommandProcessing (char* buffer, char* data, long length, commands* com, long* write_point){
+void CommandProcessing (char* buffer, char* data, long length, commands* com, long* write_point) {
     assert(buffer != 0);
     assert(data != 0);
     assert(com != 0);
     assert(write_point != 0);
 
-    int num_enter = 1;
-    char* last_symb = buffer;
+    jumps array_jumps[MAX_NUM_JMP] = {};
+//    long jumps[MAX_NUM_JMP] = {};
 
-    while ((last_symb - buffer) < length){
-        char* first_symb = last_symb;
-        last_symb = strchr(first_symb, '\n');
-        if (last_symb == nullptr)
-            last_symb = buffer + (length - 1);
+    long copy_write_point = *write_point;
+    for(int j = 0; j < 2; j++){
 
-        *last_symb = '\0';
-        if (*(last_symb - 1) == '\r') *(last_symb - 1) = '\0';
-        char command[10] = {};
-        int pointer_read = 0;
+        *write_point = copy_write_point;
+        int num_enter = 1;
+        char *last_symb = buffer;
 
-        char *comment = strchr(first_symb, ';');
-        if (comment != nullptr){
-            *comment = '\0';
-        }
+        while ((last_symb - buffer) < length) {
+            char *first_symb = last_symb;
+            last_symb = strchr(first_symb, '\n');
+            if (last_symb == nullptr)
+                last_symb = buffer + (length - 1);
 
-        int num_read = sscanf(first_symb, "%s%n", command, &pointer_read);
-//        if (num_read == 0) {
-//        }
-        unsigned int hash_read_com = MurmurHash(command);
-        /*switch (MurmurHash(command)) {
-            case com.hash_push:
+            *last_symb = '\0';
+            if (*(last_symb - 1) == '\r') *(last_symb - 1) = '\0';
+            char command[10] = {};
+            int pointer_read = 0;
 
-            break;
-        }*/
-        printf("%s\n", command);
-        printf("%u\n", hash_read_com);
-        printf("Poiter_read %u\n", pointer_read);
-        //printf("Hash_push %u\n", com->hash_push);
+            char *comment = strchr(first_symb, ';');
+            if (comment != nullptr) {
+                *comment = '\0';
+            }
+
+            int num_read = sscanf(first_symb, "%s%n", command, &pointer_read);
+    //        if (num_read == 0) {
+    //        }
+            unsigned int hash_read_com = MurmurHash(command);
+            /*switch (MurmurHash(command)) {
+                case com.hash_push:
+
+                break;
+            }*/
+            printf("%s\n", command);
+            printf("%u\n", hash_read_com);
+            printf("Poiter_read %u\n", pointer_read);
+            //printf("Hash_push %u\n", com->hash_push);
 
 
-        /*if (hash_read_com == com->hash_push){
-            double num = 0;
-            if (0 == sscanf((first_symb + pointer_read), "%lg%n", &num, &pointer_read)) {
-                printf("Don't find number of command in line <%d>\n", num_enter);
+            /*if (hash_read_com == com->hash_push){
+                double num = 0;
+                if (0 == sscanf((first_symb + pointer_read), "%lg%n", &num, &pointer_read)) {
+                    printf("Don't find number of command in line <%d>\n", num_enter);
+                    abort();
+                }
+                printf("Number %lg\n", num);
+                data[(*write_point)++] = PUSH;
+                data[(*write_point)++] = 0xAA; //send number or registr
+                *//*if number 0xAA if registr 0xBB*//*
+    //            data[(*write_point)] = 0x77; // this is wall
+
+                *((double *)(data + *write_point)) = num;
+                printf("Num FROM DATA %lg\n", *((double *)(data + *write_point)));
+                *write_point += sizeof(double);
+
+    //            data[(*write_point)] = 0x77; // this is wall
+            }*/
+
+            /*if (hash_read_com == com->hash_pop){
+                char str[10] ={};
+                data[(*write_point)++] = POP;
+                if (sscanf((first_symb + pointer_read), "%s%n", str, &pointer_read) == 0) {
+                    printf("Don't find number of command in line <%d>\n", num_enter);
+                    abort();
+                }
+            }*/
+
+            bool known_command = false;
+
+    #define DEF_CMD(name, num, code)\
+                if (hash_read_com == com->hash_##name){ code; known_command = true;}
+
+    #include "commands.h"
+
+            if (!known_command) {
+                if (command[0] == ':') {
+                    long num_jmp = 0;
+                    if (sscanf(&(command[1]), "%ld%n", &num_jmp, &pointer_read)) {
+                        array_jumps[num_jmp].address_jump_to = *write_point;
+                        array_jumps[num_jmp].used_jump = true;
+                        known_command = true;
+                    }
+                }
+            }
+
+            if (!known_command) {
+                printf("Don't find command \"%s\" in line (%d) \n", command, num_enter);
                 abort();
             }
-            printf("Number %lg\n", num);
-            data[(*write_point)++] = PUSH;
-            data[(*write_point)++] = 0xAA; //send number or registr
-            *//*if number 0xAA if registr 0xBB*//*
-//            data[(*write_point)] = 0x77; // this is wall
+    #undef DEF_CMD
 
-            *((double *)(data + *write_point)) = num;
-            printf("Num FROM DATA %lg\n", *((double *)(data + *write_point)));
-            *write_point += sizeof(double);
 
-//            data[(*write_point)] = 0x77; // this is wall
-        }*/
-
-        /*if (hash_read_com == com->hash_pop){
-            char str[10] ={};
-            data[(*write_point)++] = POP;
-            if (sscanf((first_symb + pointer_read), "%s%n", str, &pointer_read) == 0) {
-                printf("Don't find number of command in line <%d>\n", num_enter);
-                abort();
+            num_enter++;
+            // it is return text (\n)
+            *last_symb = '\n';
+            if (comment != nullptr) {
+                *comment = ';';
             }
-        }*/
+            last_symb++;
+            printf("\n");
 
-        bool known_command = false;
-
-        #define DEF_CMD(name, str, num, code)\
-            if (hash_read_com == com->hash_##name){ code; known_command = true;}
-        #include "commands.h"
-
-
-        if (!known_command) {
-            printf("Don't find command \"%s\" in line (%d) \n", command, num_enter);
-            abort();
         }
-        #undef DEF_CMD
-
-        num_enter++;
-        last_symb++;
-        printf("\n");
-
     }
 }
 
 void FindRegister(commands* com, char str_reg[], unsigned int hash_read_reg, char* num_reg, int num_enter){
     bool known_register = false;
 
-    #define REGISTER(name, str, num)\
-    if (com->hash_reg_##name == hash_read_reg && str[0] == str_reg[0]){\
-        *num_reg = 1;\
+    #define REGISTER(name, num)\
+    if (com->hash_reg_##name == hash_read_reg && #name[0] == str_reg[0]){\
+        *num_reg = num;\
         known_register = true;\
     }
     #include "register.h"
