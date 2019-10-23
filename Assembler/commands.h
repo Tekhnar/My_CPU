@@ -183,11 +183,131 @@ DEF_CMD(jmp, 11, {
                 abort();
             }
 
-            data[(*write_point)++] = 0xBB;
-            data[(*write_point)++] = array_jumps[num_jmp].address_jump_to;
+            data[(*write_point)++] = 0xAA;
+            *(long*) (&data[*write_point]) = array_jumps[num_jmp].address_jump_to;
+            *(write_point) += sizeof(long);
             array_jumps[num_jmp].used_jump = true;
+        } else {
+            char str_reg[10] ={};
+            char num_reg = 0;
+            if (sscanf((first_symb + pointer_read), "%s%n", str_reg, &pointer_read) >= 1) {
+//                printf("%s\n", str_reg);
+//                printf("Hash reg %d\n", com->hash_reg_ax);
+
+                unsigned int hash_read_reg = MurmurHash(str_reg);
+//                printf("Hash read %d", hash_read_reg);
+                FindRegister(com, str_reg, hash_read_reg, &num_reg, num_enter);
+
+                data[(*write_point)++] = 0xBB;
+
+                *((unsigned char *) (data + *write_point)) = num_reg;
+                *write_point += sizeof(char);
+
+//
+            } else {
+                printf("Don't find number or register of command push <%d>\n", num_enter);
+                abort();
+            }
         }
+
+
         //*((char*) (&data[*write_point])) = num;
 })
 
+
+#define FIND_LABEL_FOR_JMP \
+{\
+long num_jmp = 0;\
+if (sscanf((first_symb + pointer_read), "%ld%n", &num_jmp, &pointer_read)){\
+printf("num %ld\n", num_jmp);\
+*(long*)(&data[(*write_point)]) = num_jmp;\
+*(write_point) += sizeof(long);\
+}\
+\
+if (char* jmp_symbol = strchr(first_symb + pointer_read, ':')){\
+pointer_read = jmp_symbol + 1 - first_symb;\
+sscanf((first_symb + pointer_read), "%ld%n", &num_jmp, &pointer_read);\
+printf("jmp %ld\n", num_jmp);\
+\
+if (num_jmp < 0 || num_jmp >= MAX_NUM_JMP) {\
+printf("Invalid jmp number<%d>\n", num_enter);\
+abort();\
+}\
+\
+*(long*) (&data[*write_point]) = array_jumps[num_jmp].address_jump_to;\
+*(write_point) += sizeof(long);\
+array_jumps[num_jmp].used_jump = true;\
+}\
+}
+
+
+DEF_CMD(ja, 12,{
+    data[(*write_point)++] = cmd_ja;
+    FIND_LABEL_FOR_JMP
+})
+
+DEF_CMD(jae, 13,{
+    data[(*write_point)++] = cmd_jae;
+    FIND_LABEL_FOR_JMP
+})
+
+DEF_CMD(jb, 14,{
+    data[(*write_point)++] = cmd_jb;
+    FIND_LABEL_FOR_JMP
+})
+
+DEF_CMD(jbe, 15,{
+    data[(*write_point)++] = cmd_jbe;
+    FIND_LABEL_FOR_JMP
+})
+
+DEF_CMD(je, 16,{
+    data[(*write_point)++] = cmd_je;
+    FIND_LABEL_FOR_JMP
+})
+
+DEF_CMD(jne, 17,{
+    data[(*write_point)++] = cmd_jne;
+    FIND_LABEL_FOR_JMP
+})
+
+DEF_CMD(call, 18, {
+    data[(*write_point)++] = cmd_call;
+    {
+        long num_jmp = 0;
+        if (sscanf((first_symb + pointer_read), "%ld%n", &num_jmp, &pointer_read)){
+            printf("num %ld\n", num_jmp);
+            *(long*)(&data[(*write_point)]) = num_jmp;
+            *(write_point) += sizeof(long);
+
+            *(long*)(&data[(*write_point)]) = *write_point;
+            *(write_point) += sizeof(long);
+        }
+
+        if (char* jmp_symbol = strchr(first_symb + pointer_read, ':')){
+            pointer_read = jmp_symbol + 1 - first_symb;
+            sscanf((first_symb + pointer_read), "%ld%n", &num_jmp, &pointer_read);
+            printf("jmp %ld\n", num_jmp);
+
+            if (num_jmp < 0 || num_jmp >= MAX_NUM_JMP) {
+                printf("Invalid jmp number<%d>\n", num_enter);
+                abort();
+            }
+
+            *(long*) (&data[*write_point]) = array_jumps[num_jmp].address_jump_to;
+            *(write_point) += sizeof(long);
+
+            *(long*)(&data[(*write_point)]) = (long)(*write_point + sizeof(long));
+            *(write_point) += sizeof(long);
+
+            array_jumps[num_jmp].used_jump = true;
+        }
+    }
+})
+
+DEF_CMD(out, 19,{
+    data[(*write_point)++] = cmd_out;
+})
+
+#undef FIND_LABEL_FOR_JMP
 

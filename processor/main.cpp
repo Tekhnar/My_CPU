@@ -78,7 +78,7 @@ unsigned char* Buffering(const char name_file[], long* length){
 void CommandProcessing(Stack_t stack, unsigned char* data, type_cpu* registers, long length) {
     unsigned char *IP = data;
 
-    while ((IP - data + 5) <= length) {
+    while ((IP - data) <= length - 5) {
         switch (IP[0]) {
 #define DEF_CMD(name, num, code)\
             case cmd_##name: \
