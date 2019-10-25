@@ -1,0 +1,104 @@
+in
+in
+in
+
+pop cx
+pop bx
+pop ax
+
+push ax
+push 0
+je :1
+
+push bx
+push 0
+je :2
+
+push cx
+push 0
+je :3
+
+push bx
+push 2
+pow
+push 4
+push ax
+push cx
+mul
+mul
+sub
+sqrt
+pop dx
+push dx
+push 0
+je :4
+
+push bx
+push -1
+mul
+push dx
+add
+push 2
+push ax
+mul
+div
+out
+
+push bx
+push -1
+mul
+push dx
+sub
+push 2
+push ax
+mul
+div
+out
+
+:0
+end
+
+:1
+push cx
+push -1
+mul
+push bx
+div
+out
+jmp :0
+
+:2
+push cx
+push -1
+mul
+sqrt
+pop dx
+push dx
+push -1
+mul
+out
+push dx
+out
+jmp :0
+
+:3
+push 0
+out
+push bx
+push -1
+mul
+out
+jmp :0
+
+:4
+push bx
+push -1
+mul
+push 2
+push ax
+mul
+div
+out
+jmp :0
+
+

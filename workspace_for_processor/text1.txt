@@ -1,0 +1,31 @@
+in
+pop cx
+push cx
+push cx
+push 2
+jbe :3
+:2
+call :1
+push cx
+push 1
+sub
+pop cx
+push ax
+push cx
+push 2
+ja :2
+:3
+out
+end
+:1
+pop bx
+pop ax
+push bx
+push ax
+push cx
+push 1
+sub
+mul
+pop ax
+pop bx
+jmp bx
