@@ -11,303 +11,288 @@
 
 DEF_CMD(end, 0,{
     data[(*write_point)++] = cmd_end;
+    },
+    {
+        return ;
 })
 
 DEF_CMD(push, 1,
     {
         data[(*write_point)++] = cmd_push;
-
-        double num = 0;
-        if (sscanf((first_symb + pointer_read), "%lg%n", &num, &pointer_read) == 0) {
-
-            char str_reg[10] ={};
-            char num_reg = 0;
-            if (sscanf((first_symb + pointer_read), "%s%n", str_reg, &pointer_read) >= 1) {
-//                printf("%s\n", str_reg);
-//                printf("Hash reg %d\n", com->hash_reg_ax);
-
-                unsigned int hash_read_reg = MurmurHash(str_reg);
-//                printf("Hash read %d", hash_read_reg);
-                FindRegister(com, str_reg, hash_read_reg, &num_reg, num_enter);
-                /*if (com->hash_reg_ax == hash_read_reg && "ax"[0] == str_reg[0]){
-                    num_reg = 1;
-                }
-
-                else if (com->hash_reg_bx == hash_read_reg && "bx"[0] == str_reg[0]){
-                    num_reg = 2;
-                }
-
-                else if (com->hash_reg_cx == hash_read_reg && "cx"[0] == str_reg[0]){
-                    num_reg = 3;
-                }
-
-                else if (com->hash_reg_dx == hash_read_reg && "dx"[0] == str_reg[0]){
-                    num_reg = 4;
-                } else */
-                /*if (!known_register){
-                    printf("Unknown register in command push '%s'<%d>\n", str_reg, num_enter);
-                    abort();
-                }*/
-
-                data[(*write_point)++] = 0xBB;
-
-                *((unsigned char *) (data + *write_point)) = num_reg;
-                *write_point += sizeof(char);
-
-//                printf("Don't find number of command in line <%d>\n", num_enter);
-//                abort();
-            } else {
-                printf("Don't find number or register of command push <%d>\n", num_enter);
-                abort();
-            }
-        } else {
-            printf("Number %lg\n", num);
-            data[(*write_point)++] = 0xAA; //send number or registr
-            /*if number 0xAA if registr 0xBB*/
-            //            data[(*write_point)] = 0x77; // this is wall
-
-            *((double *) (data + *write_point)) = num;
-            printf("Num FROM DATA %lg\n", *((double *) (data + *write_point)));
-            *write_point += sizeof(double);
+        FunctionPUSH(&data, write_point, array_jumps, com,
+            &pointer_read, first_symb, num_enter);
+    },
+    {
+        if (IP[1] == 0xAA){
+            type_cpu temp_num = *(type_cpu*)(&IP[2]);
+            StackPush(&stack, temp_num);
+            IP += sizeof(type_cpu) + 2 * sizeof(char);
         }
-
-        //            data[(*write_point)] = 0x77; // this is wall
-    })
+        else if (IP[1] == 0xBB) {
+            StackPush(&stack, registers[IP[2]]);
+            IP += 3 * sizeof(char);
+        } else {
+            printf("Error in argument of 'push'!\n");
+            abort();
+        }
+})
 
 DEF_CMD(pop, 2,
     {
         data[(*write_point)++] = cmd_pop;
-        char str_reg[10] ={};
-        char num_reg = 0;
-        if (sscanf((first_symb + pointer_read), "%s%n", str_reg, &pointer_read) >= 1) {
-//                printf("%s\n", str_reg);
-//                printf("Hash reg %d\n", com->hash_reg_ax);
-
-            unsigned int hash_read_reg = MurmurHash(str_reg);
-//                printf("Hash read %d", hash_read_reg);
-            FindRegister(com, str_reg, hash_read_reg, &num_reg, num_enter);
-            /*if (com->hash_reg_ax == hash_read_reg && "ax"[0] == str_reg[0]){
-                num_reg = 1;
-            }
-
-            else if (com->hash_reg_bx == hash_read_reg && "bx"[0] == str_reg[0]){
-                num_reg = 2;
-            }
-
-            else if (com->hash_reg_cx == hash_read_reg && "cx"[0] == str_reg[0]){
-                num_reg = 3;
-            }
-
-            else if (com->hash_reg_dx == hash_read_reg && "dx"[0] == str_reg[0]){
-                num_reg = 4;
-            } else {
-                printf("Unknown register in command pop '%s'<%d>\n", str_reg, num_enter);
-                abort();
-            }
-*/
-
-            data[(*write_point)++] = 0xBB; // pop upload number in register
-
-            *((unsigned char *) (data + *write_point)) = num_reg;
-            *write_point += sizeof(char);
-
-//                printf("Don't find number of command in line <%d>\n", num_enter);
-//                abort();
-        } else {
-
-//            printf("Don't find number or register of command push <%d>\n", num_enter);
-//            abort();
-            data[(*write_point)++] = 0xCC; // pop not upload number. lost the number
-
+        FunctionPOP(&data, write_point, array_jumps, com,
+                     &pointer_read, first_symb, num_enter);
+    },
+    {
+        if (IP[1] == 0xBB){
+            //type_cpu temp_num = *(type_cpu*)(IP + 2);
+            StackPop(&stack, &registers[IP[2]]);
+            IP += 3 * sizeof(char);
         }
-
-
-//            printf("Don't find number of command in line <%d>\n", num_enter);
-//            printf("STR: '%d'\n", str[0]);
-//            abort();
-    })
+        else if (IP[1] == 0xCC) {
+            double tmp = -1;
+            StackPop(&stack, &tmp);
+            IP += 2 * sizeof(char);
+        } else {
+            printf("Error in argument of 'pop'!\n");
+            abort();
+        }
+})
 
 DEF_CMD(add, 3,{
         data[(*write_point)++] = cmd_add;
-    })
+    },
+    {
+        double tmp1 = 0;
+        double tmp2 = 0;
+        StackPop(&stack, &tmp1);
+        StackPop(&stack, &tmp2);
+        StackPush(&stack, tmp1 + tmp2);
+        IP++;
+})
 
 DEF_CMD(sub, 4,{
         data[(*write_point)++] = cmd_sub;
-    })
+    },
+    {
+        double tmp1 = 0;
+        double tmp2 = 0;
+        StackPop(&stack, &tmp1);
+        StackPop(&stack, &tmp2);
+        StackPush(&stack, tmp2 - tmp1);
+        IP++;
+})
 
 DEF_CMD(div, 5,{
     data[(*write_point)++] = cmd_div;
-    })
+    },
+    {
+        double tmp1 = 0;
+        double tmp2 = 0;
+        StackPop(&stack, &tmp1);
+        StackPop(&stack, &tmp2);
+        StackPush(&stack, tmp2 / tmp1);
+        IP++;
+})
 
 DEF_CMD(mul, 6,{
         data[(*write_point)++] = cmd_mul;
-    })
+    },
+    {
+        double tmp1 = 0;
+        double tmp2 = 0;
+        StackPop(&stack, &tmp1);
+        StackPop(&stack, &tmp2);
+        StackPush(&stack, tmp2 * tmp1);
+        IP++;
+})
 
 DEF_CMD(sqrt, 7,{
         data[(*write_point)++] = cmd_sqrt;
-    })
+    },
+    {
+        double tmp1 = 0;
+        StackPop(&stack, &tmp1);
+        StackPush(&stack, sqrt(tmp1));
+        IP++;
+})
 
 DEF_CMD(sin, 8,{
         data[(*write_point)++] = cmd_sin;
-    })
+    },
+    {
+        double tmp1 = 0;
+        StackPop(&stack, &tmp1);
+        StackPush(&stack, sin(tmp1));
+        IP++;
+})
 
 DEF_CMD(cos, 9,{
         data[(*write_point)++] = cmd_cos;
-    })
+    },
+    {
+        double tmp1 = 0;
+        StackPop(&stack, &tmp1);
+        StackPush(&stack, cos(tmp1));
+        IP++;
+})
 
 DEF_CMD(pow, 10,{
         data[(*write_point)++] = cmd_pow;
-    })
+    },
+    {
+        double tmp1 = 0;
+        double tmp2 = 0;
+        StackPop(&stack, &tmp1);
+        StackPop(&stack, &tmp2);
+        StackPush(&stack, pow(tmp2, tmp1));
+        IP++;
+})
 
 DEF_CMD(jmp, 11, {
-        long num_jmp = 0;
-        data[(*write_point)++] = cmd_jmp;
-//    printf("poi before %d\n", pointer_read);
-        if (sscanf((first_symb + pointer_read), "%ld%n", &num_jmp, &pointer_read)){
-            printf("num %ld\n", num_jmp);
-            data[(*write_point)++] = 0xAA;
-            *(long*)(&data[(*write_point)]) = num_jmp;
-            *(write_point) += sizeof(long);
+    data[(*write_point)++] = cmd_jmp;
+    FunctionJMP(&data, write_point, array_jumps, com, &pointer_read, first_symb, num_enter);
+    },
+    {
+        if (IP[1] == 0xBB){
+            //type_cpu temp_num = *(type_cpu*)(IP + 2);
+//        StackPop(&stack, &registers[IP[2]]);
+            IP = data + (long)((registers[IP[2]])) - 5;
         }
-//        printf("pi after %d\n", pointer_read);
-//        char s[10] = {};
-//        sscanf((first_symb + pointer_read), "%s%n", s, &pointer_read);
-//    printf("s[%s\n", s);
-        if (char* jmp_symbol = strchr(first_symb + pointer_read, ':')){
-            pointer_read = jmp_symbol + 1 - first_symb;
-            sscanf((first_symb + pointer_read), "%ld%n", &num_jmp, &pointer_read);
-            printf("jmp %ld\n", num_jmp);
-
-            if (num_jmp < 0 || num_jmp >= MAX_NUM_JMP) {
-                printf("Invalid jmp number<%d>\n", num_enter);
-                abort();
-            }
-
-            data[(*write_point)++] = 0xAA;
-            *(long*) (&data[*write_point]) = array_jumps[num_jmp].address_jump_to;
-            *(write_point) += sizeof(long);
-            array_jumps[num_jmp].used_jump = true;
+        else if (IP[1] == 0xAA) {
+            IP = data + *(long*)(&IP[1]) - 5;
         } else {
-            char str_reg[10] ={};
-            char num_reg = 0;
-            if (sscanf((first_symb + pointer_read), "%s%n", str_reg, &pointer_read) >= 1) {
-//                printf("%s\n", str_reg);
-//                printf("Hash reg %d\n", com->hash_reg_ax);
-
-                unsigned int hash_read_reg = MurmurHash(str_reg);
-//                printf("Hash read %d", hash_read_reg);
-                FindRegister(com, str_reg, hash_read_reg, &num_reg, num_enter);
-
-                data[(*write_point)++] = 0xBB;
-
-                *((unsigned char *) (data + *write_point)) = num_reg;
-                *write_point += sizeof(char);
-
-//
-            } else {
-                printf("Don't find number or register of command push <%d>\n", num_enter);
-                abort();
-            }
+            printf("Error in argument of 'jmp'!\n");
+            abort();
         }
-
-
-        //*((char*) (&data[*write_point])) = num;
 })
 
 
-#define FIND_LABEL_FOR_JMP \
-{\
-long num_jmp = 0;\
-if (sscanf((first_symb + pointer_read), "%ld%n", &num_jmp, &pointer_read)){\
-printf("num %ld\n", num_jmp);\
-*(long*)(&data[(*write_point)]) = num_jmp;\
-*(write_point) += sizeof(long);\
-}\
-\
-if (char* jmp_symbol = strchr(first_symb + pointer_read, ':')){\
-pointer_read = jmp_symbol + 1 - first_symb;\
-sscanf((first_symb + pointer_read), "%ld%n", &num_jmp, &pointer_read);\
-printf("jmp %ld\n", num_jmp);\
-\
-if (num_jmp < 0 || num_jmp >= MAX_NUM_JMP) {\
-printf("Invalid jmp number<%d>\n", num_enter);\
-abort();\
-}\
-\
-*(long*) (&data[*write_point]) = array_jumps[num_jmp].address_jump_to;\
-*(write_point) += sizeof(long);\
-array_jumps[num_jmp].used_jump = true;\
-}\
-}
+//#define FIND_LABEL_FOR_JMP
+
 
 
 DEF_CMD(ja, 12,{
     data[(*write_point)++] = cmd_ja;
-    FIND_LABEL_FOR_JMP
+    FindLabelJMP(&data, write_point, array_jumps,
+            &pointer_read, first_symb, num_enter);
+    },
+    {
+        double tmp1 = 0;
+        double tmp2 = 0;
+        StackPop(&stack, &tmp1);
+        StackPop(&stack, &tmp2);
+        if (tmp2 > tmp1) IP = data + *(long*)(&IP[1]) - 5;
+        else IP += sizeof(long) + 1; // should be do in other
 })
 
 DEF_CMD(jae, 13,{
     data[(*write_point)++] = cmd_jae;
-    FIND_LABEL_FOR_JMP
+    FindLabelJMP(&data, write_point, array_jumps,
+            &pointer_read, first_symb, num_enter);
+    },
+    {
+        double tmp1 = 0;
+        double tmp2 = 0;
+        StackPop(&stack, &tmp1);
+        StackPop(&stack, &tmp2);
+        if (tmp2 >= tmp1) IP = data + *(long*)(&IP[1]) - 5;
+        else IP += sizeof(long) + 1;
 })
 
 DEF_CMD(jb, 14,{
     data[(*write_point)++] = cmd_jb;
-    FIND_LABEL_FOR_JMP
+    FindLabelJMP(&data, write_point, array_jumps,
+            &pointer_read, first_symb, num_enter);
+    },
+    {
+        double tmp1 = 0;
+        double tmp2 = 0;
+        StackPop(&stack, &tmp1);
+        StackPop(&stack, &tmp2);
+        if (tmp2 < tmp1) IP = data + *(long*)(&IP[1]) - 5;
+        else IP += sizeof(long) + 1;
 })
 
 DEF_CMD(jbe, 15,{
     data[(*write_point)++] = cmd_jbe;
-    FIND_LABEL_FOR_JMP
+    FindLabelJMP(&data, write_point, array_jumps,
+            &pointer_read, first_symb, num_enter);
+    },
+    {
+        double tmp1 = 0;
+        double tmp2 = 0;
+        StackPop(&stack, &tmp1);
+        StackPop(&stack, &tmp2);
+        if (tmp2 <= tmp1) IP = data + *(long*)(&IP[1]) - 5;
+        else IP += sizeof(long) + 1;
 })
 
 DEF_CMD(je, 16,{
     data[(*write_point)++] = cmd_je;
-    FIND_LABEL_FOR_JMP
+    FindLabelJMP(&data, write_point, array_jumps,
+            &pointer_read, first_symb, num_enter);
+
+    /*if (com->hash_push == 0){
+        printf("ERROR 16\n");
+        abort();
+    }*/
+    },
+    {
+        double tmp1 = 0;
+        double tmp2 = 0;
+        StackPop(&stack, &tmp1);
+        StackPop(&stack, &tmp2);
+//    printf("IP%p\n", IP);
+        if (tmp2 == tmp1) IP = data + *(long*)(&IP[1]) - 5;
+        else IP += sizeof(long) + 1;
+//    printf("IP%p\n", IP);
 })
 
 DEF_CMD(jne, 17,{
     data[(*write_point)++] = cmd_jne;
-    FIND_LABEL_FOR_JMP
+    FindLabelJMP(&data, write_point, array_jumps,
+            &pointer_read, first_symb, num_enter);
+    },
+    {
+        double tmp1 = 0;
+        double tmp2 = 0;
+        StackPop(&stack, &tmp1);
+        StackPop(&stack, &tmp2);
+        if (tmp2 != tmp1) IP = data + *(long*)(&IP[1]) - 5;
+        else IP += sizeof(long) + 1;
 })
 
 DEF_CMD(call, 18, {
     data[(*write_point)++] = cmd_call;
+    FunctionCALL(&data, write_point, array_jumps,
+            &pointer_read, first_symb, num_enter);
+    },
     {
-        long num_jmp = 0;
-        if (sscanf((first_symb + pointer_read), "%ld%n", &num_jmp, &pointer_read)){
-            printf("num %ld\n", num_jmp);
-            *(long*)(&data[(*write_point)]) = num_jmp;
-            *(write_point) += sizeof(long);
-
-            *(long*)(&data[(*write_point)]) = *write_point;
-            *(write_point) += sizeof(long);
-        }
-
-        if (char* jmp_symbol = strchr(first_symb + pointer_read, ':')){
-            pointer_read = jmp_symbol + 1 - first_symb;
-            sscanf((first_symb + pointer_read), "%ld%n", &num_jmp, &pointer_read);
-            printf("jmp %ld\n", num_jmp);
-
-            if (num_jmp < 0 || num_jmp >= MAX_NUM_JMP) {
-                printf("Invalid jmp number<%d>\n", num_enter);
-                abort();
-            }
-
-            *(long*) (&data[*write_point]) = array_jumps[num_jmp].address_jump_to;
-            *(write_point) += sizeof(long);
-
-            *(long*)(&data[(*write_point)]) = (long)(*write_point + sizeof(long));
-            *(write_point) += sizeof(long);
-
-            array_jumps[num_jmp].used_jump = true;
-        }
-    }
+        type_cpu temp_num = (type_cpu)(*(long*)(&IP[1 + sizeof(long)]));
+        StackPush(&stack, temp_num);
+        IP = data + *(long*)(&IP[1]) - 5;
 })
 
 DEF_CMD(out, 19,{
     data[(*write_point)++] = cmd_out;
+    },
+    {
+        double tmp = -1;
+        StackPop(&stack, &tmp);
+        printf("out: %lg\n", tmp);
+        IP++;
 })
 
-#undef FIND_LABEL_FOR_JMP
+DEF_CMD(in, 20,{
+    data[(*write_point)++] = cmd_in;
+    },
+    {
+        double tmp = -1;
+        scanf("%lg", &tmp);
+        StackPush(&stack, tmp);
+        IP++;
+})
+
+//#undef FIND_LABEL_FOR_JMP
 

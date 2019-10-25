@@ -7,8 +7,12 @@
 
 const int MAX_NUM_JMP = 10;
 
+const char WRITE_NUM = 0xAA;
+const char WRITE_REG = 0xBB;
+const char WRITE_NOTHING = 0xCC;
+
 struct commands {
-    #define DEF_CMD(name, num, code)\
+    #define DEF_CMD(name, num, code, code_cpu)\
        unsigned int hash_##name;
     #include "commands.h"
 
@@ -27,23 +31,7 @@ struct commands {
 };
 
 
-/*
-enum code {
-    END,
-    PUSH,
-    POP,
-    ADD,
-    SUB,
-    DIV,
-    MUL,
-    SQRT,
-    SIN,
-    COS,
-    POW
-};
-*/
-
-#define DEF_CMD(name, num, code)\
+#define DEF_CMD(name, num, code, code_cpu)\
     const unsigned char cmd_##name = num;
     #include "commands.h"
 

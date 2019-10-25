@@ -3,4 +3,4 @@ project(processor)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(processor main.cpp my_stack.h commands_cpu.h)
+add_executable(processor main.cpp my_stack.h)

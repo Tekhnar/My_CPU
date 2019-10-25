@@ -24,7 +24,7 @@ void CheckFile(unsigned char **buffer);
 void CommandProcessing(Stack_t stack, unsigned char* data, type_cpu* regist, long length);
 
 
+#include "functions.cpp"
 
 #endif //PROCESSOR_FUNCTIONS_H
 
-#include "functions.cpp"

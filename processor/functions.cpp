@@ -6,7 +6,7 @@
 void Work(unsigned char *data, long length) {
     Stack_t stack = {};
     StackInit(&stack);
-    type_cpu registers[MAX_NUM_REGISTER];
+    type_cpu registers[MAX_NUM_REGISTER] = {};
 
 //    printf("PI[1] %x %x %x\n,",IP[0], IP[1], 0xAA);
     CommandProcessing(stack, data, registers, length);
@@ -54,12 +54,12 @@ void CommandProcessing(Stack_t stack, unsigned char* data, type_cpu* registers, 
 
     while ((IP - data) <= length - 5) {
         switch (IP[0]) {
-#define DEF_CMD(name, num, code)\
+#define DEF_CMD(name, num, code, code_cpu)\
             case cmd_##name: \
-            code; \
+            code_cpu; \
             break;
 
-#include "commands_cpu.h"
+#include "../Assembler/commands.h"
 
             default:
                 printf("Unknown command!\n");
