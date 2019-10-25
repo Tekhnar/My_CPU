@@ -90,7 +90,10 @@ FILE* ConvertFile(FILE* file, commands* com, int num_arg, char *poin_arg[], cons
     char* buffer = (char *)calloc(length, sizeof(char));
     char* data = (char *)calloc(length * 3, sizeof(char)); // should be rewrite!
     int num_re = fread(buffer, sizeof(char), length, file);
+
+    #ifdef DEBUG
     printf("%s\n", buffer);
+    #endif
 
 //    int num_enter = 0;
     long write_point = 0;
@@ -152,10 +155,11 @@ void CommandProcessing (char* buffer, char* data, long length, commands* com, lo
             //        }
             unsigned int hash_read_com = MurmurHash(command);
 
+#ifdef DEBUG
             printf("%s\n", command);
             printf("%u\n", hash_read_com);
             printf("Poiter_read %u\n", pointer_read);
-
+#endif
             bool known_command = false;
 
 
@@ -165,7 +169,11 @@ void CommandProcessing (char* buffer, char* data, long length, commands* com, lo
 #include "commands.h"
 
             if (!known_command) {
+
+                    #ifdef DEBUG
                     printf("sscanf %d", sscanf(command, "%*[A-Za-z:0-9]%n", &pointer_read));
+                    #endif
+
                 if (sscanf(command, "%*[A-Za-z:0-9]%n", &pointer_read) == -1) known_command = true;
                 if (command[0] == ':') {
                     long num_jmp = 0;
@@ -191,8 +199,9 @@ void CommandProcessing (char* buffer, char* data, long length, commands* com, lo
                 *comment = ';';
             }
             last_symb++;
+            #ifdef DEBUG
             printf("\n");
-
+            #endif
         }
     }
 }
@@ -230,7 +239,11 @@ void FunctionJMP(char** data, long* write_point, jumps array_jumps[], commands* 
 
 //    printf("poi before %d\n", pointer_read);
     if (sscanf((first_symb + *pointer_read), "%ld%n", &num_jmp, pointer_read)){
+
+#ifdef DEBUG
         printf("num %ld\n", num_jmp);
+#endif
+
         *(data[(*write_point)++]) = WRITE_NUM;
         *(long*)(&data[(*write_point)]) = num_jmp;
         *(write_point) += sizeof(long);
@@ -242,7 +255,10 @@ void FunctionJMP(char** data, long* write_point, jumps array_jumps[], commands* 
     if (char* jmp_symbol = strchr(first_symb + *pointer_read, ':')){
         *pointer_read = jmp_symbol + 1 - first_symb;
         sscanf((first_symb + *pointer_read), "%ld%n", &num_jmp, pointer_read);
+
+#ifdef DEBUG
         printf("jmp %ld\n", num_jmp);
+#endif
 
         if (num_jmp < 0 || num_jmp >= MAX_NUM_JMP) {
             printf("Invalid jmp number<%d>\n", num_enter);
@@ -276,10 +292,6 @@ void FunctionJMP(char** data, long* write_point, jumps array_jumps[], commands* 
         }
     }
 
-    if (com->hash_push == 0){
-        printf("ERROR 0.9\n");
-        abort();
-    }
     //*((char*) (&(*data)[*write_point])) = num;
 }
 
@@ -289,7 +301,11 @@ void FindLabelJMP(char** data, long* write_point, jumps array_jumps[],
 
     long num_jmp = 0;
     if (sscanf((first_symb + *pointer_read), "%ld%n", &num_jmp, pointer_read)){
+
+        #ifdef DEBUG
         printf("num %ld\n", num_jmp);
+        #endif
+
         *(long*)(&(*data)[(*write_point)]) = num_jmp;
         *(write_point) += sizeof(long);
     }
@@ -297,7 +313,10 @@ void FindLabelJMP(char** data, long* write_point, jumps array_jumps[],
     if (char* jmp_symbol = strchr(first_symb + *pointer_read, ':')){
         *pointer_read = jmp_symbol + 1 - first_symb;
         sscanf((first_symb + *pointer_read), "%ld%n", &num_jmp, pointer_read);
+
+        #ifdef DEBUG
         printf("jmp %ld\n", num_jmp);
+        #endif
 
         if (num_jmp < 0 || num_jmp >= MAX_NUM_JMP) {
             printf("Invalid jmp number<%d>\n", num_enter);
@@ -317,7 +336,11 @@ void FunctionCALL(char** data, long* write_point, jumps array_jumps[],
 
     long num_jmp = 0;
     if (sscanf((first_symb + *pointer_read), "%ld%n", &num_jmp, pointer_read)){
+
+        #ifdef DEBUG
         printf("num %ld\n", num_jmp);
+        #endif
+
         *(long*)(&(*data)[(*write_point)]) = num_jmp;
         *(write_point) += sizeof(long);
 
@@ -328,7 +351,10 @@ void FunctionCALL(char** data, long* write_point, jumps array_jumps[],
     if (char* jmp_symbol = strchr(first_symb + *pointer_read, ':')){
         *pointer_read = jmp_symbol + 1 - first_symb;
         sscanf((first_symb + *pointer_read), "%ld%n", &num_jmp, pointer_read);
+
+        #ifdef DEBUG
         printf("jmp %ld\n", num_jmp);
+        #endif
 
         if (num_jmp < 0 || num_jmp >= MAX_NUM_JMP) {
             printf("Invalid jmp number<%d>\n", num_enter);
@@ -346,7 +372,7 @@ void FunctionCALL(char** data, long* write_point, jumps array_jumps[],
 
 }
 
-void FunctionPUSH(char** data, long* write_point, jumps array_jumps[], commands* com,
+void FunctionPUSH(char** data, long* write_point, commands* com,
         int* pointer_read, char* first_symb, int num_enter){
 
     double num = 0;
@@ -355,56 +381,44 @@ void FunctionPUSH(char** data, long* write_point, jumps array_jumps[], commands*
         char str_reg[10] ={};
         char num_reg = 0;
         if (sscanf((first_symb + *pointer_read), "%s%n", str_reg, pointer_read) >= 1) {
-//                printf("%s\n", str_reg);
-//                printf("Hash reg %d\n", com->hash_reg_ax);
-            if (com->hash_push == 0){
-                printf("ERROR 1\n");
-                abort();
-            }
+
 
             unsigned int hash_read_reg = MurmurHash(str_reg);
 //                printf("Hash read %d", hash_read_reg);
             FindRegister(com, str_reg, hash_read_reg, &num_reg, num_enter);
 
-            /*if (com->hash_push == 0){
-                printf("ERROR 1.5\n");
-                abort();
-            }*/
 
             (*data)[(*write_point)++] = WRITE_REG;
 
             *((unsigned char *) (*data + *write_point)) = num_reg;
             *write_point += sizeof(char);
 
-//                printf("Don't find number of command in line <%d>\n", num_enter);
-//                abort();
+
         } else {
             printf("Don't find number or register of command push <%d>\n", num_enter);
             abort();
         }
     } else {
-        if (com->hash_push == 0){
-            printf("ERROR 1.8\n");
-            abort();
-        }
+
+        #ifdef DEBUG
         printf("Number %lg\n", num);
+        #endif
+
         (*data)[(*write_point)++] = WRITE_NUM; //send number or registr
         /*if number 0xAA if registr 0xBB*/
         //            data[(*write_point)] = 0x77; // this is wall
 
         *((double *) (*data + *write_point)) = num;
-        printf("Num FROM DATA %lg\n", *((double *) (*data + *write_point)));
-        *write_point += sizeof(double);
-    }
 
-    //            data[(*write_point)] = 0x77; // this is wall
-    if (com->hash_push == 0){
-        printf("ERROR 2\n");
-        abort();
+        #ifdef DEBUG
+        printf("Num FROM DATA %lg\n", *((double *) (*data + *write_point)));
+        #endif
+
+        *write_point += sizeof(double);
     }
 }
 
-void FunctionPOP(char** data, long* write_point, jumps array_jumps[],
+void FunctionPOP(char** data, long* write_point,
                   commands* com, int* pointer_read, char* first_symb, int num_enter){
     char str_reg[10] ={};
     char num_reg = 0;

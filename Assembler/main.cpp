@@ -1,3 +1,5 @@
+//#define DEBUG
+
 #include "functions_asm.h"
 
 int main(int num_arg, char *poin_arg[]) {

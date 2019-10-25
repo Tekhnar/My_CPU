@@ -1,7 +1,7 @@
 //
 // Created by texnar on 23/10/2019.
 //
-//#include "functions.h"
+
 
 void Work(unsigned char *data, long length) {
     Stack_t stack = {};

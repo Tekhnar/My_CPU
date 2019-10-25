@@ -29,9 +29,9 @@ void FindLabelJMP(char** data, long* write_point, jumps array_jumps[],
         int* pointer_read, char* first_symb, int num_enter);
 void FunctionCALL(char** data, long* write_point, jumps array_jumps[],
         int* pointer_read, char* first_symb, int num_enter);
-void FunctionPUSH(char** data, long* write_point, jumps array_jumps[],
+void FunctionPUSH(char** data, long* write_point,
         commands* com, int* pointer_read, char* first_symb, int num_enter);
-void FunctionPOP(char** data, long* write_point, jumps array_jumps[],
+void FunctionPOP(char** data, long* write_point,
         commands* com, int* pointer_read, char* first_symb, int num_enter);
 
 FILE* OpenFile(int num_arg, char *poin_arg[]);

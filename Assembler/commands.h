@@ -19,7 +19,7 @@ DEF_CMD(end, 0,{
 DEF_CMD(push, 1,
     {
         data[(*write_point)++] = cmd_push;
-        FunctionPUSH(&data, write_point, array_jumps, com,
+        FunctionPUSH(&data, write_point, com,
             &pointer_read, first_symb, num_enter);
     },
     {
@@ -40,7 +40,7 @@ DEF_CMD(push, 1,
 DEF_CMD(pop, 2,
     {
         data[(*write_point)++] = cmd_pop;
-        FunctionPOP(&data, write_point, array_jumps, com,
+        FunctionPOP(&data, write_point, com,
                      &pointer_read, first_symb, num_enter);
     },
     {

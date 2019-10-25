@@ -14,7 +14,6 @@
 typedef double type_cpu;
 
 const int MAX_NUM_REGISTER = 4;
-//#include "/home/texnar/CLionProjects/Interpreter/general_data.h"
 #define CPU_MODE
 #include "../Assembler/general_data.h"
 long ItLength(FILE* file);
@@ -27,4 +26,3 @@ void CommandProcessing(Stack_t stack, unsigned char* data, type_cpu* regist, lon
 #include "functions.cpp"
 
 #endif //PROCESSOR_FUNCTIONS_H
-
