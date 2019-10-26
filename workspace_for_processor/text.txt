@@ -1,6 +1,18 @@
+push 1
+pop ax
+push ax
+pop [2]
+push 50
+pop [10]
+push [10]
+out
+push [2]
+out
+
 in
 in
 in
+
 
 pop cx
 pop bx
@@ -59,6 +71,10 @@ out
 end
 
 :1
+push bx
+push 0
+je :0
+
 push cx
 push -1
 mul
@@ -100,5 +116,4 @@ mul
 div
 out
 jmp :0
-
 

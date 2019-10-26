@@ -34,6 +34,18 @@ void FunctionPUSH(char** data, long* write_point,
 void FunctionPOP(char** data, long* write_point,
         commands* com, int* pointer_read, char* first_symb, int num_enter);
 
+void SearchEmptyLine(char* command, int* pointer_read, bool* known_command, jumps array_jumps[], long *write_point);
+void ReturnTextToOriginal(int* num_enter, char* comment, char** last_symb);
+void SearchLabel(char* command, int* pointer_read, bool* known_command);
+void SearchEndOfLine(char** last_symb, char* first_symb,
+                     char* buffer, char* comment, long length);
+void FuncJmpToNum(char** data, long* write_point,
+                  jumps array_jumps[], commands* com, int* pointer_read,
+                  char* first_symb, int num_enter, long* num_jmp, char* jmp_symbol);
+void FuncJmpToReg(char** data, long* write_point,
+                  commands* com, int* pointer_read, char* first_symb, int num_enter);
+void WriteInFile(int num_arg,char** poin_arg, char* data, long write_point, const char* name_file);
+
 FILE* OpenFile(int num_arg, char *poin_arg[]);
 
 FILE* ConvertFile(FILE* file, commands* com, int num_arg, char *poin_arg[],

@@ -6,10 +6,14 @@
 void Work(unsigned char *data, long length) {
     Stack_t stack = {};
     StackInit(&stack);
+    unsigned char *ram = ConstructRAM();
+    //*(type_cpu *)&ram[1] = 66;
     type_cpu registers[MAX_NUM_REGISTER] = {};
 
 //    printf("PI[1] %x %x %x\n,",IP[0], IP[1], 0xAA);
-    CommandProcessing(stack, data, registers, length);
+    CommandProcessing(stack, data, registers, length, ram);
+    //printf("RAMM %lg", *(type_cpu *)&ram[1]);
+    DestructRAM(ram);
 }
 
 void CheckFile(unsigned char **buffer) {
@@ -49,15 +53,15 @@ unsigned char* Buffering(const char name_file[], long* length){
     return data;
 }
 
-void CommandProcessing(Stack_t stack, unsigned char* data, type_cpu* registers, long length) {
+void CommandProcessing(Stack_t stack, unsigned char* data, type_cpu* registers, long length, unsigned char* ram) {
     unsigned char *IP = data;
 
     while ((IP - data) <= length - 5) {
         switch (IP[0]) {
 #define DEF_CMD(name, num, code, code_cpu)\
-            case cmd_##name: \
+            case cmd_##name: {\
             code_cpu; \
-            break;
+            break;}
 
 #include "../Assembler/commands.h"
 
@@ -73,3 +77,15 @@ void CommandProcessing(Stack_t stack, unsigned char* data, type_cpu* registers, 
     }
 }
 
+unsigned char* ConstructRAM(){
+    unsigned char* ram = (unsigned char*) malloc(SIZE_RAM);
+    if (ram == nullptr){
+        printf("Error in malloc\n");
+        abort();
+    }
+    return ram;
+}
+
+void DestructRAM(unsigned char* ram){
+    free(ram);
+}

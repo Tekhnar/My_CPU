@@ -23,17 +23,34 @@ DEF_CMD(push, 1,
             &pointer_read, first_symb, num_enter);
     },
     {
-        if (IP[1] == 0xAA){
-            type_cpu temp_num = *(type_cpu*)(&IP[2]);
-            StackPush(&stack, temp_num);
-            IP += sizeof(type_cpu) + 2 * sizeof(char);
-        }
-        else if (IP[1] == 0xBB) {
-            StackPush(&stack, registers[IP[2]]);
-            IP += 3 * sizeof(char);
-        } else {
-            printf("Error in argument of 'push'!\n");
-            abort();
+        switch (IP[1]){
+            case WRITE_NUM:{
+                type_cpu temp_num = *(type_cpu*)(&IP[2]);
+                StackPush(&stack, temp_num);
+                IP += sizeof(type_cpu) + 2 * sizeof(char);
+                break;
+            }
+            case WRITE_REG: {
+                StackPush(&stack, registers[IP[2]]);
+                IP += 3 * sizeof(char);
+                break;
+            }
+            case RAM_NUM: {
+                StackPush(&stack, *(type_cpu *)(&ram[*(long *) (&IP[2])]));
+                IP += sizeof(long) + 2 * sizeof(char);
+                break;
+            }
+            case RAM_REG: {
+//                printf("regisss %d\n", (long)(registers[IP[2]]  - 1e-12));
+                long temp_num = /**(long *)*/ (long)(registers[IP[2]] - 1e-12);
+                StackPush(&stack, *(type_cpu *)&ram[temp_num]);
+                IP += 3 * sizeof(char);
+                break;
+            }
+            default:
+                printf("Error in argument of 'push'!\n");
+                abort();
+                break;
         }
 })
 
@@ -44,18 +61,41 @@ DEF_CMD(pop, 2,
                      &pointer_read, first_symb, num_enter);
     },
     {
-        if (IP[1] == 0xBB){
-            //type_cpu temp_num = *(type_cpu*)(IP + 2);
-            StackPop(&stack, &registers[IP[2]]);
-            IP += 3 * sizeof(char);
-        }
-        else if (IP[1] == 0xCC) {
-            double tmp = -1;
-            StackPop(&stack, &tmp);
-            IP += 2 * sizeof(char);
-        } else {
-            printf("Error in argument of 'pop'!\n");
-            abort();
+        switch (IP[1]){
+            case WRITE_REG: {
+                StackPop(&stack, &registers[IP[2]]);
+                IP += 3 * sizeof(char);
+                break;
+            }
+            case WRITE_NOTHING: {
+                double tmp = -1;
+                StackPop(&stack, &tmp);
+                IP += 2 * sizeof(char);
+                break;
+            }
+            case RAM_NUM: {
+                type_cpu tmp = -1;
+                StackPop(&stack, &tmp);
+//                printf("gfgfg %lg\n", tmp);
+//                printf("num ram %ld\n", *(long *)&IP[2]);
+                *(type_cpu *)(&ram[*(long *) (&IP[2])]) = tmp;
+//                printf("num test %lg\n", *(type_cpu *)(&ram[*(long *) (&IP[2])]));
+                IP += sizeof(long) + 2 * sizeof(char);
+                break;
+            }
+            case RAM_REG: {
+                type_cpu temp_num = -1/**(long *)*/;
+                StackPop(&stack, &temp_num);
+
+                *(type_cpu *)&ram[(long)(registers[IP[2]] + 1e-12)] = temp_num;
+
+                IP += 3 * sizeof(char);
+                break;
+            }
+            default:
+                printf("Error in argument of 'pop'!\n");
+                abort();
+                break;
         }
 })
 
@@ -154,12 +194,12 @@ DEF_CMD(jmp, 11, {
     FunctionJMP(&data, write_point, array_jumps, com, &pointer_read, first_symb, num_enter);
     },
     {
-        if (IP[1] == 0xBB){
+        if (IP[1] == WRITE_REG){
             //type_cpu temp_num = *(type_cpu*)(IP + 2);
 //        StackPop(&stack, &registers[IP[2]]);
             IP = data + (long)((registers[IP[2]])) - 5;
         }
-        else if (IP[1] == 0xAA) {
+        else if (IP[1] == WRITE_NUM) {
             IP = data + *(long*)(&IP[1]) - 5;
         } else {
             printf("Error in argument of 'jmp'!\n");
@@ -232,18 +272,12 @@ DEF_CMD(je, 16,{
     data[(*write_point)++] = cmd_je;
     FindLabelJMP(&data, write_point, array_jumps,
             &pointer_read, first_symb, num_enter);
-
-    /*if (com->hash_push == 0){
-        printf("ERROR 16\n");
-        abort();
-    }*/
     },
     {
         double tmp1 = 0;
         double tmp2 = 0;
         StackPop(&stack, &tmp1);
         StackPop(&stack, &tmp2);
-//    printf("IP%p\n", IP);
         if (tmp2 == tmp1) IP = data + *(long*)(&IP[1]) - 5;
         else IP += sizeof(long) + 1;
 //    printf("IP%p\n", IP);

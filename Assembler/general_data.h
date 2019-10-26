@@ -7,9 +7,11 @@
 
 const int MAX_NUM_JMP = 10;
 
-const char WRITE_NUM = 0xAA;
-const char WRITE_REG = 0xBB;
-const char WRITE_NOTHING = 0xCC;
+const unsigned char WRITE_NUM = 0xAA;
+const unsigned char WRITE_REG = 0xBB;
+const unsigned char WRITE_NOTHING = 0xCC;
+const unsigned char RAM_NUM = 0xDD;
+const unsigned char RAM_REG = 0xEE;
 
 struct commands {
     #define DEF_CMD(name, num, code, code_cpu)\
