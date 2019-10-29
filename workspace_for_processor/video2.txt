@@ -1,0 +1,54 @@
+ini
+
+push 0.001
+pop cx
+
+:1
+push cx
+sin
+push 100
+mul
+push 200
+add
+pop bx
+
+push cx
+cos
+push 100
+mul
+push 200
+add
+pop ax
+
+push 800
+push bx
+rou
+mul
+push ax
+rou
+add
+push 3
+mul
+pop dx
+
+push 255
+pop DB [dx]
+push dx
+push 1
+add
+pop dx
+push 255
+pop DB [dx]
+
+push cx
+push 0.001
+add
+pop cx
+
+push cx
+push 6.29
+jb :1
+
+upd
+in
+end

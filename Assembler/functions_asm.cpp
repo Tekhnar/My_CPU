@@ -96,16 +96,11 @@ FILE* ConvertFile(FILE* file, commands* com, int num_arg, char *poin_arg[], cons
 
     long write_point = 0;
 
-    *(int *)data = 'aKiM';
-    data[4] = VERSION;
-    write_point += 5;
-
+    CheckVersion(data, &write_point);
     CommandProcessing (buffer, data, length, com, &write_point);
-
     WriteInFile(num_arg, poin_arg, data, write_point, name_file);
 
-    free(buffer);
-    free(data);
+    FreeMemory(buffer, data);
 }
 
 void CommandProcessing (char* buffer, char* data, long length, commands* com, long* write_point) {
@@ -146,8 +141,8 @@ void CommandProcessing (char* buffer, char* data, long length, commands* com, lo
 
 #include "commands.h"
 
-            SearchEmptyLine(command, &pointer_read, &known_command, array_jumps, write_point);
-            SearchLabel(command, &pointer_read, &known_command);
+            SearchEmptyLine(command, &known_command, array_jumps, write_point);
+            SearchLabel(command, &known_command);
 
             if (!known_command) {
             printf("Don't find command \"%s\" in line (%d) \n", command, num_enter);
@@ -299,16 +294,16 @@ void FunctionPUSH(char** data, long* write_point, commands* com,
 
     if (point_start_ram != 0){
 
+        bool type_is_char = SearchTypeRam(pointer_read, first_symb);
+
         int num_rez = 0;
         num_rez = sscanf((point_start_ram + 1), "%lg%n", &num, pointer_read);
 //        printf("in tttttt %d\n", num_rez);
 
         if (num_rez == 0) {
-
             char str_reg[10] ={};
             char num_reg = 0;
-            if (sscanf(point_start_ram, "%s%n", str_reg, pointer_read) >= 1) {
-//                printf("\n%c\n", str_reg[0]);
+            if (sscanf(point_start_ram, "%s", str_reg) >= 1) {
 
                 char* point_end = strchr(str_reg, ']');
                 if (point_end != 0) *point_end = '\0';
@@ -323,7 +318,9 @@ void FunctionPUSH(char** data, long* write_point, commands* com,
 //                printf("Hash read %d", hash_read_reg);
                 FindRegister(com, str_reg + 1, hash_read_reg, &num_reg, num_enter);
 
-                (*data)[(*write_point)++] = RAM_REG;
+                if (type_is_char) (*data)[(*write_point)++] = RAM_REG_CHAR;
+                else (*data)[(*write_point)++] = RAM_REG;
+
                 *((unsigned char *) (*data + *write_point)) = num_reg;
                 *write_point += sizeof(char);
 
@@ -338,8 +335,13 @@ void FunctionPUSH(char** data, long* write_point, commands* com,
 
 //            printf("symb %c\n", point_start_ram[0]);
 
-            (*data)[(*write_point)++] = RAM_NUM;
-            *((long *) (*data + *write_point)) = num;
+            if (type_is_char) {
+                (*data)[(*write_point)++] = RAM_NUM_CHAR;
+                *((long *) (*data + *write_point)) = num;
+            } else {
+                (*data)[(*write_point)++] = RAM_NUM;
+                *((long *) (*data + *write_point)) = num;
+            }
             *write_point += sizeof(long);
         }
 
@@ -393,57 +395,58 @@ void FunctionPOP(char** data, long* write_point,
                   commands* com, int* pointer_read, char* first_symb, int num_enter){
 
     double num = 0;
-    
+
     char* point_start_ram = strchr(first_symb + *pointer_read, '[');
 
     if (point_start_ram != 0){
-        {
+        bool type_is_char = SearchTypeRam(pointer_read, first_symb);
 
-            int num_rez = 0;
-            num_rez = sscanf((point_start_ram + 1), "%lg%n", &num, pointer_read);
-//        printf("in tttttt %d\n", num_rez);
+        int num_rez = 0;
+        num_rez = sscanf((point_start_ram + 1), "%lg", &num);
 
-            if (num_rez == 0) {
+        if (num_rez == 0) {
+            char str_reg[10] ={};
+            char num_reg = 0;
 
-                char str_reg[10] ={};
-                char num_reg = 0;
-                if (sscanf(point_start_ram, "%s%n", str_reg, pointer_read) >= 1) {
+            if (sscanf(point_start_ram, "%s", str_reg) >= 1) {
 //                printf("\n%c\n", str_reg[0]);
 
-                    char* point_end = strchr(str_reg, ']');
-                    if (point_end != 0) *point_end = '\0';
-//                str_reg[0] = '\0';
-                    else {
-                        printf("Unknown structure register\n");
-                        abort();
-                    }
-//                printf("str_reg '%s'\n", &str_reg[1]);
-
-                    unsigned int hash_read_reg = MurmurHash(str_reg + 1);
-//                printf("Hash read %d", hash_read_reg);
-                    FindRegister(com, str_reg + 1, hash_read_reg, &num_reg, num_enter);
-
-                    (*data)[(*write_point)++] = RAM_REG;
-                    *((unsigned char *) (*data + *write_point)) = num_reg;
-                    *write_point += sizeof(char);
-
-                } else {
-                    printf("Don't find number or register of command push <%d>\n", num_enter);
+                char* point_end = strchr(str_reg, ']');
+                if (point_end != 0) *point_end = '\0';
+                else {
+                    printf("Unknown structure register\n");
                     abort();
                 }
-            } else {
+//                printf("str_reg '%s'\n", &str_reg[1]);
 
-                #ifdef DEBUG
-                printf("Number %lg\n", num);
-                #endif
+                unsigned int hash_read_reg = MurmurHash(str_reg + 1);
+
+                FindRegister(com, str_reg + 1, hash_read_reg, &num_reg, num_enter);
+
+                if (type_is_char) (*data)[(*write_point)++] = RAM_REG_CHAR;
+                    else (*data)[(*write_point)++] = RAM_REG;
+                *((unsigned char *) (*data + *write_point)) = num_reg;
+                *write_point += sizeof(char);
+
+            } else {
+                printf("Don't find number or register of command push <%d>\n", num_enter);
+                abort();
+            }
+        } else {
+
+            #ifdef DEBUG
+            printf("Number %lg\n", num);
+            #endif
 
 //            printf("symb %c\n", point_start_ram[0]);
-
+            if (type_is_char) {
+                (*data)[(*write_point)++] = RAM_NUM_CHAR;
+                *((long *) (*data + *write_point)) = num;
+            } else {
                 (*data)[(*write_point)++] = RAM_NUM;
                 *((long *) (*data + *write_point)) = num;
-                *write_point += sizeof(long);
             }
-
+            *write_point += sizeof(long);
         }
     } else {
         char str_reg[10] ={};
@@ -468,8 +471,8 @@ void FunctionPOP(char** data, long* write_point,
 
 }
 
-void SearchEmptyLine(char* command, int* pointer_read,
-        bool* known_command, jumps array_jumps[], long *write_point){
+void SearchEmptyLine(char* command, bool* known_command,
+        jumps array_jumps[], long *write_point){
     if (!*known_command) {
 
 #ifdef DEBUG
@@ -487,9 +490,9 @@ void SearchEmptyLine(char* command, int* pointer_read,
     }
 }
 
-void SearchLabel(char* command, int* pointer_read, bool* known_command){
+void SearchLabel(char* command, bool* known_command){
     if (!*known_command) {
-        if (sscanf(command, "%*[A-Za-z:0-9]%n", pointer_read) == -1) *known_command = true;
+        if (sscanf(command, "%*[A-Za-z:0-9]") == -1) *known_command = true;
     }
 }
 
@@ -547,10 +550,12 @@ void FuncJmpToReg(char** data, long* write_point,
         commands* com, int* pointer_read, char* first_symb, int num_enter){
     char str_reg[10] ={};
     char num_reg = 0;
-    if (sscanf((first_symb + *pointer_read), "%s%n", str_reg, pointer_read) >= 1) {
+    int tmp_pointer_read = 0;
+    if (sscanf((first_symb + *pointer_read), "%s%n", str_reg, &tmp_pointer_read) >= 1) {
 //                printf("%s\n", str_reg);
 //                printf("Hash reg %d\n", com->hash_reg_ax);
 
+        *pointer_read +=tmp_pointer_read;
         unsigned int hash_read_reg = MurmurHash(str_reg);
 //                printf("Hash read %d", hash_read_reg);
         FindRegister(com, str_reg, hash_read_reg, &num_reg, num_enter);
@@ -575,4 +580,37 @@ void WriteInFile(int num_arg,char** poin_arg, char* data, long write_point, cons
 
     fwrite(data, sizeof(char), write_point, newfile);
     fclose(newfile);
+}
+
+inline void FreeMemory(char* buffer, char* data){
+    free(buffer);
+    free(data);
+}
+
+inline void CheckVersion(char* data, long* write_point){
+    *(int *)data = 'aKiM';
+    data[4] = VERSION;
+    *write_point += 5;
+}
+
+inline void CloseFile(FILE* file){
+    fclose(file);
+}
+
+bool SearchTypeRam(int* pointer_read, char* first_symb){
+    char str_type[5] = {};
+    int point_tmp = 0;
+//    printf("I was in this line\n");
+//    printf("In function %d\n", *(first_symb + *pointer_read));
+    if (sscanf(first_symb + *pointer_read, "%s%n", str_type, &point_tmp) >= 1){
+//        printf("----------\n");
+//        printf("%s\n---------\n", str_type);
+
+        if (!strcmp(str_type, "DB")) {
+//            printf("DB\n");
+            *pointer_read += point_tmp;
+            return true;
+        }
+    }
+    return false;
 }

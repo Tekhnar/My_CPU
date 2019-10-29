@@ -1,0 +1,42 @@
+in
+
+push 2
+push 100
+pop DB [20]
+push 10
+pop ax
+push DB [20]
+out
+pop cx
+push cx
+
+call :1
+out
+end
+
+:1
+pop bx
+pop ax
+push bx
+push ax
+
+push cx
+push 1
+jbe :2
+
+push cx
+push 1
+sub
+pop cx
+push cx
+mul
+
+call :1
+
+:2
+pop bx
+pop ax
+push bx
+push ax
+ret
+

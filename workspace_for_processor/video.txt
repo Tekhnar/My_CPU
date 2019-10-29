@@ -1,0 +1,38 @@
+ini
+push 10
+pop ax
+push 255
+pop DB [9]
+push 255
+pop DB [10]
+push 255
+pop DB [11]
+
+:1
+push 255
+push ax
+pop bx
+pop DB [bx]
+push 255
+
+push bx
+push 1
+add
+pop bx
+pop DB [bx]
+
+push 800
+push 3
+mul
+push bx
+push 1
+add
+add
+pop ax
+
+push ax
+push 500000
+jbe :1
+upd
+in
+end

@@ -12,6 +12,9 @@ const unsigned char WRITE_REG = 0xBB;
 const unsigned char WRITE_NOTHING = 0xCC;
 const unsigned char RAM_NUM = 0xDD;
 const unsigned char RAM_REG = 0xEE;
+const unsigned char RAM_REG_CHAR = 0xEF;
+const unsigned char RAM_NUM_CHAR = 0xFE;
+
 
 struct commands {
     #define DEF_CMD(name, num, code, code_cpu)\

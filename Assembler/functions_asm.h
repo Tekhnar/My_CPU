@@ -34,9 +34,9 @@ void FunctionPUSH(char** data, long* write_point,
 void FunctionPOP(char** data, long* write_point,
         commands* com, int* pointer_read, char* first_symb, int num_enter);
 
-void SearchEmptyLine(char* command, int* pointer_read, bool* known_command, jumps array_jumps[], long *write_point);
+void SearchEmptyLine(char* command, bool* known_command, jumps array_jumps[], long *write_point);
 void ReturnTextToOriginal(int* num_enter, char* comment, char** last_symb);
-void SearchLabel(char* command, int* pointer_read, bool* known_command);
+void SearchLabel(char* command, bool* known_command);
 void SearchEndOfLine(char** last_symb, char* first_symb,
                      char* buffer, char* comment, long length);
 void FuncJmpToNum(char** data, long* write_point,
@@ -44,9 +44,17 @@ void FuncJmpToNum(char** data, long* write_point,
                   char* first_symb, int num_enter, long* num_jmp, char* jmp_symbol);
 void FuncJmpToReg(char** data, long* write_point,
                   commands* com, int* pointer_read, char* first_symb, int num_enter);
+
 void WriteInFile(int num_arg,char** poin_arg, char* data, long write_point, const char* name_file);
+inline void FreeMemory(char* buffer, char* data);
+inline void CheckVersion(char* data, long* write_point);
+
+bool SearchTypeRam(int* pointer_read, char* first_symb);
+
+
 
 FILE* OpenFile(int num_arg, char *poin_arg[]);
+inline void CloseFile(FILE* file);
 
 FILE* ConvertFile(FILE* file, commands* com, int num_arg, char *poin_arg[],
         const char name_file[] = "../workspace_for_processor/CODE.txt");

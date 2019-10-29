@@ -13,6 +13,7 @@ DEF_CMD(end, 0,{
     data[(*write_point)++] = cmd_end;
     },
     {
+        //exit;
         return ;
 })
 
@@ -23,35 +24,7 @@ DEF_CMD(push, 1,
             &pointer_read, first_symb, num_enter);
     },
     {
-        switch (IP[1]){
-            case WRITE_NUM:{
-                type_cpu temp_num = *(type_cpu*)(&IP[2]);
-                StackPush(&stack, temp_num);
-                IP += sizeof(type_cpu) + 2 * sizeof(char);
-                break;
-            }
-            case WRITE_REG: {
-                StackPush(&stack, registers[IP[2]]);
-                IP += 3 * sizeof(char);
-                break;
-            }
-            case RAM_NUM: {
-                StackPush(&stack, *(type_cpu *)(&ram[*(long *) (&IP[2])]));
-                IP += sizeof(long) + 2 * sizeof(char);
-                break;
-            }
-            case RAM_REG: {
-//                printf("regisss %d\n", (long)(registers[IP[2]]  - 1e-12));
-                long temp_num = /**(long *)*/ (long)(registers[IP[2]] - 1e-12);
-                StackPush(&stack, *(type_cpu *)&ram[temp_num]);
-                IP += 3 * sizeof(char);
-                break;
-            }
-            default:
-                printf("Error in argument of 'push'!\n");
-                abort();
-                break;
-        }
+        FunctionPUSHCpu(stack, &IP, registers, ram);
 })
 
 DEF_CMD(pop, 2,
@@ -61,42 +34,7 @@ DEF_CMD(pop, 2,
                      &pointer_read, first_symb, num_enter);
     },
     {
-        switch (IP[1]){
-            case WRITE_REG: {
-                StackPop(&stack, &registers[IP[2]]);
-                IP += 3 * sizeof(char);
-                break;
-            }
-            case WRITE_NOTHING: {
-                double tmp = -1;
-                StackPop(&stack, &tmp);
-                IP += 2 * sizeof(char);
-                break;
-            }
-            case RAM_NUM: {
-                type_cpu tmp = -1;
-                StackPop(&stack, &tmp);
-//                printf("gfgfg %lg\n", tmp);
-//                printf("num ram %ld\n", *(long *)&IP[2]);
-                *(type_cpu *)(&ram[*(long *) (&IP[2])]) = tmp;
-//                printf("num test %lg\n", *(type_cpu *)(&ram[*(long *) (&IP[2])]));
-                IP += sizeof(long) + 2 * sizeof(char);
-                break;
-            }
-            case RAM_REG: {
-                type_cpu temp_num = -1/**(long *)*/;
-                StackPop(&stack, &temp_num);
-
-                *(type_cpu *)&ram[(long)(registers[IP[2]] + 1e-12)] = temp_num;
-
-                IP += 3 * sizeof(char);
-                break;
-            }
-            default:
-                printf("Error in argument of 'pop'!\n");
-                abort();
-                break;
-        }
+        FunctionPOPCpu(stack, &IP, &registers, ram);
 })
 
 DEF_CMD(add, 3,{
@@ -105,9 +43,9 @@ DEF_CMD(add, 3,{
     {
         double tmp1 = 0;
         double tmp2 = 0;
-        StackPop(&stack, &tmp1);
-        StackPop(&stack, &tmp2);
-        StackPush(&stack, tmp1 + tmp2);
+        StackPop(stack, &tmp1);
+        StackPop(stack, &tmp2);
+        StackPush(stack, tmp1 + tmp2);
         IP++;
 })
 
@@ -117,9 +55,9 @@ DEF_CMD(sub, 4,{
     {
         double tmp1 = 0;
         double tmp2 = 0;
-        StackPop(&stack, &tmp1);
-        StackPop(&stack, &tmp2);
-        StackPush(&stack, tmp2 - tmp1);
+        StackPop(stack, &tmp1);
+        StackPop(stack, &tmp2);
+        StackPush(stack, tmp2 - tmp1);
         IP++;
 })
 
@@ -129,9 +67,9 @@ DEF_CMD(div, 5,{
     {
         double tmp1 = 0;
         double tmp2 = 0;
-        StackPop(&stack, &tmp1);
-        StackPop(&stack, &tmp2);
-        StackPush(&stack, tmp2 / tmp1);
+        StackPop(stack, &tmp1);
+        StackPop(stack, &tmp2);
+        StackPush(stack, tmp2 / tmp1);
         IP++;
 })
 
@@ -141,9 +79,9 @@ DEF_CMD(mul, 6,{
     {
         double tmp1 = 0;
         double tmp2 = 0;
-        StackPop(&stack, &tmp1);
-        StackPop(&stack, &tmp2);
-        StackPush(&stack, tmp2 * tmp1);
+        StackPop(stack, &tmp1);
+        StackPop(stack, &tmp2);
+        StackPush(stack, tmp2 * tmp1);
         IP++;
 })
 
@@ -152,8 +90,8 @@ DEF_CMD(sqrt, 7,{
     },
     {
         double tmp1 = 0;
-        StackPop(&stack, &tmp1);
-        StackPush(&stack, sqrt(tmp1));
+        StackPop(stack, &tmp1);
+        StackPush(stack, sqrt(tmp1));
         IP++;
 })
 
@@ -162,8 +100,8 @@ DEF_CMD(sin, 8,{
     },
     {
         double tmp1 = 0;
-        StackPop(&stack, &tmp1);
-        StackPush(&stack, sin(tmp1));
+        StackPop(stack, &tmp1);
+        StackPush(stack, sin(tmp1));
         IP++;
 })
 
@@ -172,8 +110,8 @@ DEF_CMD(cos, 9,{
     },
     {
         double tmp1 = 0;
-        StackPop(&stack, &tmp1);
-        StackPush(&stack, cos(tmp1));
+        StackPop(stack, &tmp1);
+        StackPush(stack, cos(tmp1));
         IP++;
 })
 
@@ -183,9 +121,9 @@ DEF_CMD(pow, 10,{
     {
         double tmp1 = 0;
         double tmp2 = 0;
-        StackPop(&stack, &tmp1);
-        StackPop(&stack, &tmp2);
-        StackPush(&stack, pow(tmp2, tmp1));
+        StackPop(stack, &tmp1);
+        StackPop(stack, &tmp2);
+        StackPush(stack, pow(tmp2, tmp1));
         IP++;
 })
 
@@ -195,8 +133,6 @@ DEF_CMD(jmp, 11, {
     },
     {
         if (IP[1] == WRITE_REG){
-            //type_cpu temp_num = *(type_cpu*)(IP + 2);
-//        StackPop(&stack, &registers[IP[2]]);
             IP = data + (long)((registers[IP[2]])) - 5;
         }
         else if (IP[1] == WRITE_NUM) {
@@ -207,11 +143,6 @@ DEF_CMD(jmp, 11, {
         }
 })
 
-
-//#define FIND_LABEL_FOR_JMP
-
-
-
 DEF_CMD(ja, 12,{
     data[(*write_point)++] = cmd_ja;
     FindLabelJMP(&data, write_point, array_jumps,
@@ -220,8 +151,8 @@ DEF_CMD(ja, 12,{
     {
         double tmp1 = 0;
         double tmp2 = 0;
-        StackPop(&stack, &tmp1);
-        StackPop(&stack, &tmp2);
+        StackPop(stack, &tmp1);
+        StackPop(stack, &tmp2);
         if (tmp2 > tmp1) IP = data + *(long*)(&IP[1]) - 5;
         else IP += sizeof(long) + 1; // should be do in other
 })
@@ -234,8 +165,8 @@ DEF_CMD(jae, 13,{
     {
         double tmp1 = 0;
         double tmp2 = 0;
-        StackPop(&stack, &tmp1);
-        StackPop(&stack, &tmp2);
+        StackPop(stack, &tmp1);
+        StackPop(stack, &tmp2);
         if (tmp2 >= tmp1) IP = data + *(long*)(&IP[1]) - 5;
         else IP += sizeof(long) + 1;
 })
@@ -248,8 +179,8 @@ DEF_CMD(jb, 14,{
     {
         double tmp1 = 0;
         double tmp2 = 0;
-        StackPop(&stack, &tmp1);
-        StackPop(&stack, &tmp2);
+        StackPop(stack, &tmp1);
+        StackPop(stack, &tmp2);
         if (tmp2 < tmp1) IP = data + *(long*)(&IP[1]) - 5;
         else IP += sizeof(long) + 1;
 })
@@ -262,8 +193,8 @@ DEF_CMD(jbe, 15,{
     {
         double tmp1 = 0;
         double tmp2 = 0;
-        StackPop(&stack, &tmp1);
-        StackPop(&stack, &tmp2);
+        StackPop(stack, &tmp1);
+        StackPop(stack, &tmp2);
         if (tmp2 <= tmp1) IP = data + *(long*)(&IP[1]) - 5;
         else IP += sizeof(long) + 1;
 })
@@ -276,8 +207,8 @@ DEF_CMD(je, 16,{
     {
         double tmp1 = 0;
         double tmp2 = 0;
-        StackPop(&stack, &tmp1);
-        StackPop(&stack, &tmp2);
+        StackPop(stack, &tmp1);
+        StackPop(stack, &tmp2);
         if (tmp2 == tmp1) IP = data + *(long*)(&IP[1]) - 5;
         else IP += sizeof(long) + 1;
 //    printf("IP%p\n", IP);
@@ -291,8 +222,8 @@ DEF_CMD(jne, 17,{
     {
         double tmp1 = 0;
         double tmp2 = 0;
-        StackPop(&stack, &tmp1);
-        StackPop(&stack, &tmp2);
+        StackPop(stack, &tmp1);
+        StackPop(stack, &tmp2);
         if (tmp2 != tmp1) IP = data + *(long*)(&IP[1]) - 5;
         else IP += sizeof(long) + 1;
 })
@@ -304,7 +235,7 @@ DEF_CMD(call, 18, {
     },
     {
         type_cpu temp_num = (type_cpu)(*(long*)(&IP[1 + sizeof(long)]));
-        StackPush(&stack, temp_num);
+        StackPush(stack, temp_num);
         IP = data + *(long*)(&IP[1]) - 5;
 })
 
@@ -313,7 +244,7 @@ DEF_CMD(out, 19,{
     },
     {
         double tmp = -1;
-        StackPop(&stack, &tmp);
+        StackPop(stack, &tmp);
         printf("out: %lg\n", tmp);
         IP++;
 })
@@ -324,9 +255,37 @@ DEF_CMD(in, 20,{
     {
         double tmp = -1;
         scanf("%lg", &tmp);
-        StackPush(&stack, tmp);
+        StackPush(stack, tmp);
+        IP++;
+})
+DEF_CMD(ret, 21,{
+    data[(*write_point)++] = cmd_ret;
+    },
+    {
+        double tmp = -1;
+        StackPop(stack, &tmp);
+        IP = data + (long)(tmp) - 5;
+})
+
+DEF_CMD(ini, 22, {
+    data[(*write_point)++] = cmd_ini;
+    },
+    {
+        txCreateWindow(WINDOW_WIGTH, WINDOW_LENGTH);
+        main_window = txVideoMemory();
         IP++;
 })
 
-//#undef FIND_LABEL_FOR_JMP
+DEF_CMD(upd, 23, {
+    data[(*write_point)++] = cmd_upd;
+},
+    {
+    FunctionUPDCpu(&IP, ram, &main_window);
+    })
 
+DEF_CMD(rou, 24, {
+    data[(*write_point)++] = cmd_rou;
+},
+    {
+        FunctionROUCpu(stack, &IP);
+    })
