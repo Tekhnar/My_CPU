@@ -1,7 +1,7 @@
 //
 // Created by texnar on 23/10/2019.
 //
-#pragma warn -Wmultichar
+//#pragma warn -Wmultichar
 
 #ifndef PROCESSOR_FUNCTIONS_H
 #define PROCESSOR_FUNCTIONS_H

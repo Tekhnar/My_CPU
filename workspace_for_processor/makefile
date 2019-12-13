@@ -3,7 +3,7 @@ all:
 	g++ ../Assembler/main.cpp -o ../Assembler/./main
                  
 ../processor/./main: ../processor/*
-	g++ ../processor/main.cpp -o ../processor/main `txlin-macflags --cflags` `txlin-macflags --libs` 
+	g++ ../processor/main.cpp -o ./main `txlin-macflags --cflags` `txlin-macflags --libs`
 
 
 factorial: ../Assembler/./main ../processor/./main

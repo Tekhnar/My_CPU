@@ -125,7 +125,7 @@ void CommandProcessing (char* buffer, char* data, long length, commands* com, lo
             bool known_command = false;
             int pointer_read = 0;
 
-            SearchEndOfLine(&last_symb, first_symb, buffer, comment, length);
+            SearchEndOfLine(&last_symb, first_symb, buffer, &comment, length);
 
             sscanf(first_symb, "%s%n", command, &pointer_read);
             unsigned int hash_read_com = MurmurHash(command);
@@ -511,7 +511,7 @@ void ReturnTextToOriginal(int* num_enter, char* comment, char** last_symb){
 }
 
 void SearchEndOfLine(char** last_symb, char* first_symb,
-        char* buffer, char* comment, long length){
+        char* buffer, char** comment, long length){
     *last_symb = strchr(first_symb, '\n');
     if (*last_symb == nullptr)
         *last_symb = buffer + (length - 1);
@@ -519,9 +519,9 @@ void SearchEndOfLine(char** last_symb, char* first_symb,
     **last_symb = '\0';
     if (*(*last_symb - 1) == '\r') *(*last_symb - 1) = '\0';
 
-    comment = strchr(first_symb, ';');
-    if (comment != nullptr) {
-        *comment = '\0';
+    *comment = strchr(first_symb, ';');
+    if (*comment != nullptr) {
+        **comment = '\0';
     }
 }
 

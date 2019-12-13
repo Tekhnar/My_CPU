@@ -1,14 +1,16 @@
 in
-
-push 2
+in ;8
+push 5
 push 100
 pop DB [20]
 push 10
 pop ax
 push DB [20]
 out
+out
 pop cx
 push cx
+
 
 call :1
 out

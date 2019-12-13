@@ -38,7 +38,7 @@ void SearchEmptyLine(char* command, bool* known_command, jumps array_jumps[], lo
 void ReturnTextToOriginal(int* num_enter, char* comment, char** last_symb);
 void SearchLabel(char* command, bool* known_command);
 void SearchEndOfLine(char** last_symb, char* first_symb,
-                     char* buffer, char* comment, long length);
+                     char* buffer, char** comment, long length);
 void FuncJmpToNum(char** data, long* write_point,
                   jumps array_jumps[], commands* com, int* pointer_read,
                   char* first_symb, int num_enter, long* num_jmp, char* jmp_symbol);

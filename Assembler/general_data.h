@@ -5,7 +5,7 @@
 #ifndef INTERPRETER_GENERAL_DATA_H
 #define INTERPRETER_GENERAL_DATA_H
 
-const int MAX_NUM_JMP = 10;
+const int MAX_NUM_JMP = 1000;
 
 const unsigned char WRITE_NUM = 0xAA;
 const unsigned char WRITE_REG = 0xBB;
