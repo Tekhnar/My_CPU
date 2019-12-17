@@ -116,13 +116,13 @@ void FunctionPUSHCpu(Stack_t* stack, unsigned char** IP,
             break;
         }
         case RAM_NUM: {
-            StackPush(stack, *(type_cpu *)(&ram[*(long *) (&(*IP)[2]) ]));
+            StackPush(stack, *(type_cpu *)(&ram[sizeof (double) * *(long *) (&(*IP)[2]) ]));
             (*IP) += sizeof(long) + 2 * sizeof(char);
             break;
         }
         case RAM_REG: {
 //                printf("regisss %d\n", (long)(registers[IP[2]]  - 1e-12));
-            long temp_num = (long)(registers[(*IP)[2]] + 1e-12);
+            long temp_num = sizeof(double) * (long)(registers[(*IP)[2]] + 1e-12);
             StackPush(stack, *(type_cpu *)&ram[temp_num]);
             (*IP) += 3 * sizeof(char);
             break;
@@ -176,7 +176,7 @@ void FunctionPOPCpu(Stack_t* stack, unsigned char** IP,
             StackPop(stack, &tmp);
 //                printf("gfgfg %lg\n", tmp);
 //                printf("num ram %ld\n", *(long *)&(*IP)[2]);
-            *(type_cpu *)(&ram[*(long *) (&(*IP)[2])]) = tmp;
+            *(type_cpu *)(&ram[sizeof (type_cpu)* *(long *) (&(*IP)[2])]) = tmp;
 //                printf("num test %lg\n", *(type_cpu *)(&ram[*(long *) (&(*IP)[2])]));
             (*IP) += sizeof(long) + 2 * sizeof(char);
             break;
@@ -184,7 +184,7 @@ void FunctionPOPCpu(Stack_t* stack, unsigned char** IP,
         case RAM_REG: {
             type_cpu temp_num = -1;
             StackPop(stack, &temp_num);
-            *(type_cpu *)&ram[(long)((*registers)[(*IP)[2]])] = temp_num;
+            *(type_cpu *)&ram[sizeof (double) * (long)((*registers)[(*IP)[2]])] = temp_num;
 
             (*IP) += 3 * sizeof(char);
             break;
