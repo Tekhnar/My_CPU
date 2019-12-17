@@ -28,7 +28,8 @@ struct commands {
     #define REGISTER(name, num)\
         unsigned int hash_reg_##name;
 
-    #include "register.h"
+//    #include "register.h"
+    #include "../Assembler/register.h"
 
     #undef REGISTER
 
@@ -42,6 +43,6 @@ struct commands {
 
 #undef DEF_CMD
 
-char VERSION = 1;
+char VERSION = 2;
 
 #endif //INTERPRETER_GENERAL_DATA_H

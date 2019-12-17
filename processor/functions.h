@@ -16,7 +16,7 @@
 
 typedef double type_cpu;
 
-const int MAX_NUM_REGISTER = 4;
+const int MAX_NUM_REGISTER = 7;
 const int SIZE_RAM = 1440500;
 
 const long WINDOW_LENGTH = 600; //Length

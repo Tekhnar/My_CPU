@@ -273,7 +273,7 @@ int AutoLenghtDecrease(Stack_t *stack) {
     if ((stack->length / FACTOR_DYNAMIC - stack->hyster) >=  stack->size){
         void *point = nullptr;
 
-        point = realloc(stack->buffer, (stack->length / FACTOR_DYNAMIC * sizeof(Elem_t) + FACTOR_DYNAMIC * sizeof(Bird_t)));
+        point = realloc (stack->buffer, (stack->length / FACTOR_DYNAMIC * sizeof(Elem_t) + FACTOR_DYNAMIC * sizeof(Bird_t)));
         if (point == nullptr) {
             printf("Error in realloc()\n");
             assert(point != nullptr);

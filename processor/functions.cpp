@@ -5,7 +5,7 @@
 
 void Work(unsigned char *data, long length) {
     Stack_t stack = {};
-    StackInit(&stack);
+    StackInit (&stack);
     unsigned char *ram = ConstructRAM();
     //*(type_cpu *)&ram[1] = 66;
     type_cpu registers[MAX_NUM_REGISTER] = {};
@@ -13,7 +13,9 @@ void Work(unsigned char *data, long length) {
 //    printf("PI[1] %x %x %x\n,",IP[0], IP[1], 0xAA);
     CommandProcessing(&stack, data, registers, length, ram);
     //printf("RAMM %lg", *(type_cpu *)&ram[1]);
-    DestructRAM(ram);
+    DestructRAM (ram);
+    StackClose (&stack);
+//    printf ("222");
 }
 
 void CheckFile(unsigned char **buffer) {
@@ -155,8 +157,10 @@ void FunctionPOPCpu(Stack_t* stack, unsigned char** IP,
         type_cpu** registers, unsigned char* ram){
     switch ((*IP)[1]){
         case WRITE_REG: {
-
+//            printf("Reg_num %d\n", (*IP)[2]);
             StackPop(stack, &(*registers)[(*IP)[2]]);
+
+
 //            printf("Reg_pop %lg\n", (*registers)[(*IP)[2]]);
             (*IP) += 3 * sizeof(char);
             break;

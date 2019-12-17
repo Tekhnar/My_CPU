@@ -153,7 +153,7 @@ DEF_CMD(ja, 12,{
         double tmp2 = 0;
         StackPop(stack, &tmp1);
         StackPop(stack, &tmp2);
-        if (tmp2 > tmp1) IP = data + *(long*)(&IP[1]) - 5;
+        if (tmp2 <= tmp1) IP = data + *(long*)(&IP[1]) - 5;
         else IP += sizeof(long) + 1; // should be do in other
 })
 
@@ -167,7 +167,7 @@ DEF_CMD(jae, 13,{
         double tmp2 = 0;
         StackPop(stack, &tmp1);
         StackPop(stack, &tmp2);
-        if (tmp2 >= tmp1) IP = data + *(long*)(&IP[1]) - 5;
+        if (tmp2 < tmp1) IP = data + *(long*)(&IP[1]) - 5;
         else IP += sizeof(long) + 1;
 })
 
@@ -181,7 +181,7 @@ DEF_CMD(jb, 14,{
         double tmp2 = 0;
         StackPop(stack, &tmp1);
         StackPop(stack, &tmp2);
-        if (tmp2 < tmp1) IP = data + *(long*)(&IP[1]) - 5;
+        if (tmp2 >= tmp1) IP = data + *(long*)(&IP[1]) - 5;
         else IP += sizeof(long) + 1;
 })
 
@@ -195,7 +195,7 @@ DEF_CMD(jbe, 15,{
         double tmp2 = 0;
         StackPop(stack, &tmp1);
         StackPop(stack, &tmp2);
-        if (tmp2 <= tmp1) IP = data + *(long*)(&IP[1]) - 5;
+        if (tmp2 > tmp1) IP = data + *(long*)(&IP[1]) - 5;
         else IP += sizeof(long) + 1;
 })
 
@@ -209,7 +209,7 @@ DEF_CMD(je, 16,{
         double tmp2 = 0;
         StackPop(stack, &tmp1);
         StackPop(stack, &tmp2);
-        if (tmp2 == tmp1) IP = data + *(long*)(&IP[1]) - 5;
+        if (tmp2 != tmp1) IP = data + *(long*)(&IP[1]) - 5;
         else IP += sizeof(long) + 1;
 //    printf("IP%p\n", IP);
 })
@@ -224,7 +224,7 @@ DEF_CMD(jne, 17,{
         double tmp2 = 0;
         StackPop(stack, &tmp1);
         StackPop(stack, &tmp2);
-        if (tmp2 != tmp1) IP = data + *(long*)(&IP[1]) - 5;
+        if (tmp2 == tmp1) IP = data + *(long*)(&IP[1]) - 5;
         else IP += sizeof(long) + 1;
 })
 
