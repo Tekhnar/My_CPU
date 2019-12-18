@@ -129,14 +129,17 @@ DEF_CMD(pow, 10,{
 
 DEF_CMD(jmp, 11, {
     data[(*write_point)++] = cmd_jmp;
+    printf ("%u\n", cmd_jmp);
     FunctionJMP(&data, write_point, array_jumps, com, &pointer_read, first_symb, num_enter);
+
     },
     {
+
         if (IP[1] == WRITE_REG){
             IP = data + (long)((registers[IP[2]])) - 5;
         }
         else if (IP[1] == WRITE_NUM) {
-            IP = data + *(long*)(&IP[1]) - 5;
+            IP = data + *(long*)(&IP[2]) - 5;
         } else {
             printf("Error in argument of 'jmp'!\n");
             abort();

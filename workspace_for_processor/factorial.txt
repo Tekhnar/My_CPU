@@ -21,10 +21,13 @@ pop bx
 pop ax
 push bx
 push ax
-
+push cx
+out
+push 1
+out
 push cx
 push 1
-jbe :2
+ja :2
 
 push cx
 push 1
